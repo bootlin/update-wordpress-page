@@ -33,6 +33,18 @@
 
 . /etc/lsb-release
 PS2PDF=/usr/bin/ps2pdf
+MV='/bin/mv -f'
+
+command_exists () {
+
+        command -v "$1" &> /dev/null
+
+        if [ $? != 0 ]
+        then
+                echo "ERROR: program $1 is not available"
+                exit 1
+        fi
+}
 
 # Fix only needed for Ubuntu before 11.10
 
@@ -59,15 +71,7 @@ then
 
 fi
 
-if [ -z "$GIT" ]
-then
-        echo "ERROR: GIT variable not set"
-        exit 1
-fi
-
 # Check that all needed commands exist
-
-. $GIT/training-scripts/odf/common.sh
 
 command_exists $PS2PDF
 
