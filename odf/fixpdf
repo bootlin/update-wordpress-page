@@ -1,0 +1,89 @@
+#!/bin/sh
+#
+# Workaround for the Courier font issue found in LibreOffice/OpenOffice 3.3
+# (PDF exported documents had the Courrier font missing, characters being
+# replaced by bullets in Windows).
+#
+# Fixed in OpenOffice/LibreOffice 3.4
+#
+# Copyright (C) 2011-2012 Free Electrons
+# Author: Michael Opdenacker <michael at free-electrons com>
+# 
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 2 of the License, or (at your
+# option) any later version.
+# 
+# THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+# NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+# USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+# ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# You should have received a copy of the  GNU General Public License along
+# with this program; if not, write  to the Free Software Foundation, Inc.,
+# 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+. /etc/lsb-release
+PS2PDF=/usr/bin/ps2pdf
+
+# Fix only needed for Ubuntu before 11.10
+
+compare_version=`echo "$DISTRIB_RELEASE > 11.04" | bc`
+
+if [ $compare_version ]
+then
+	# Detect a known issue on 11.10 Oneiric
+
+	for f in 43 44 63 64
+	do
+		files=`find /usr/share/fonts/type1/gsfonts -name "n0190${f}l.*"`
+
+		if [ "$files" != "" ]
+		then
+			echo "fixpdf ERROR: you are using Ubuntu 11.10 Oneiric,"
+ 			echo "but haven't applied the workaround described on"
+			echo "https://bugs.launchpad.net/df-libreoffice/+bug/779366/comments/5"
+			echo "The Nimbus Sans L fonts in your document are probably broken"
+			echo "Aborting."
+			exit 1
+		fi
+	done
+
+fi
+
+if [ -z "$GIT" ]
+then
+        echo "ERROR: GIT variable not set"
+        exit 1
+fi
+
+# Check that all needed commands exist
+
+. $GIT/training-scripts/odf/common.sh
+
+command_exists $PS2PDF
+
+file=$1
+tmp=${file}-needsfixing.pdf
+
+if [ ! -f "$file" ]
+then
+        echo "fixpdf ERROR: the $file document doesn't exist!"
+        exit 1
+fi
+
+$MV -f $file $tmp 
+$PS2PDF $tmp $file
+
+if [ ! -f "$file" ]
+then
+        echo "fixpdf ERROR: ps2pdf failed to fix the $file document"
+        exit 1
+fi
