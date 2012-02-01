@@ -29,13 +29,13 @@
 # with this program; if not, write  to the Free Software Foundation, Inc.,
 # 675 Mass Ave, Cambridge, MA 02139, USA.
 
-if [ -z "$GIT" ]
+if [ -z "$FEGIT" ]
 then
-	echo "ERROR: GIT variable not set"
+	echo "ERROR: FEGIT variable not set"
 	exit 1
 fi
 
-FIXPDF=$GIT/training-utils/odf/fixpdf
+FIXPDF=$FEGIT/training-scripts/odf/fixpdf
 
 INPUT=$1
 OUTPUT=`echo $INPUT | sed -e 's/\.odp/.pdf/g' | sed -e 's/\.odt/.pdf/g'`
