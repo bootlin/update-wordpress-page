@@ -56,17 +56,6 @@ def debug (s):
     if options.debug:
        print '[DEBUG] ' + s
  
-def repeat_string(s, number):
-
-    # Returns a string containing number times the given string
-    
-    str = ''
-    
-    for i in range(number):
-        str += s
- 
-    return str
-       
 def url_failure(url, why):
 
     global link_text, link_type, link_xml_file, input_file, found_errors
@@ -310,7 +299,7 @@ def xml_char_data(data):
           link_text[current_url].append(data)
 
     if inside_heading:
-       internal_targets.add(repeat_string('0.', heading_level,) + data + '|outline')            
+       internal_targets.add('0.' * heading_level + data + '|outline')            
 
 def xml_end_element(name):
 
