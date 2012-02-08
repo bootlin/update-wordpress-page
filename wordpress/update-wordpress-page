@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+#
+# update-wordpress-page: updates a Wordpress page with the contents
+# of the input file
+#
+# Described on http://free-electrons.com/blog/automated-wp-page-updates/
+# Download: git.free-electrons.com/training-scripts/tree/wordpress
+#
+# Usage: update-wordpress-page url-base post-id content-file
+# 
+# Example: update-wordpress-page myblog.com 245 page-contents
+#
+# For each url-base, the $HOME/.update-wordpress-page file
+# should give the wordpress user and password
+# 
+# Multiple wordpress sites are supported.
+#
+# Tested with Python 2.6 and WordPress 3.0 to 3.2
+#
+# Advantage: you don't have to leave a direct database connection
+# to your website open, and don't have to understand
+# the WordPress database.
+#
+# Copyright 2010, Free Electrons, <michael dot opdenacker free-electrons com> 
+# License: Public domain
+
+import urllib, urllib2, cookielib, optparse, sys, os
+import ConfigParser, ClientForm
+
+usage = 'Usage: %prog url-base postid page-contents'
+description = 'Updates a Wordpress page with the specified contents'
+optparser = optparse.OptionParser(usage=usage, version='1.0beta1', \
+ 				  description=description)
+(options, args) = optparser.parse_args()
+
+if len(args) != 3:
+   print 'Wrong number of arguments. Exiting.'
+   sys.exit()
+
+url_base = args[0]
+post_id = args [1]
+login_url = 'http://' + url_base + '/wp-login.php'
+url = 'http://' + url_base + '/wp-admin/post.php?post=' \
+      + post_id + '&action=edit'
+
+page_contents = args[2]
+file = open(page_contents)
+new_contents= file.read()
+file.close()
+
+# Read configuration file
+
+config = ConfigParser.RawConfigParser()
+config.read(os.environ['HOME'] + '/.update-wordpress-page')
+user = config.get(url_base, 'user')
+password = config.get(url_base, 'password')
+
+# Open the authentication page
+cj = cookielib.CookieJar()
+opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+
+login_data = urllib.urlencode({'log' : user,
+'pwd' : password,
+})
+
+# Log in
+resp = opener.open(login_url, login_data)
+resp.close()
+
+# Access member only pages
+resp = opener.open(url)
+
+forms = ClientForm.ParseResponse(resp, backwards_compat=False)
+
+try:
+	# Wordpress has multiple forms and uses forms[1] for content
+	# Other versions or other CMS may use [0] or [2]...
+	form = forms[1]
+	form["content"] = new_contents
+	content = opener.open(form.click()).read()
+	check_success(content)
+ 
+except urllib2.HTTPError, e:
+	sys.exit("%d: %s" % (e.code, e.msg))
+except IOError, e:
+	print e
+except:
+	pass
+
+resp.close()
