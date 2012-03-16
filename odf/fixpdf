@@ -34,6 +34,7 @@
 . /etc/lsb-release
 PS2PDF=/usr/bin/ps2pdf
 MV='/bin/mv -f'
+RM='/bin/rm -f'
 
 command_exists () {
 
@@ -68,6 +69,7 @@ then
 			exit 1
 		fi
 	done
+	exit 1
 
 fi
 
@@ -86,9 +88,11 @@ fi
 
 $MV -f $file $tmp 
 $PS2PDF $tmp $file
+$RM $tmp
 
 if [ ! -f "$file" ]
 then
         echo "fixpdf ERROR: ps2pdf failed to fix the $file document"
         exit 1
 fi
+
