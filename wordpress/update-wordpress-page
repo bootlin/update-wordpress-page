@@ -15,13 +15,21 @@
 # 
 # Multiple wordpress sites are supported.
 #
-# Tested with Python 2.6 and WordPress 3.0 to 3.2
+# Tested with Python 2.6 to 2.7, WordPress 3.0 to 3.3
 #
 # Advantage: you don't have to leave a direct database connection
 # to your website open, and don't have to understand
 # the WordPress database.
 #
-# Copyright 2010, Free Electrons, <michael dot opdenacker free-electrons com> 
+# Requirements (tested on Ubuntu 12.04):
+# wget http://pypi.python.org/packages/source/C/ClientForm/ClientForm-0.2.10.tar.gz
+# tar zxf ClientForm-0.2.10.tar.gz
+# cd ClientForm-0.2.10
+# sudo apt-get install python-setuptools
+# python setup.py build
+# sudo python setup.py install
+#
+# Copyright 2010-2012, Free Electrons, <michael dot opdenacker free-electrons com> 
 # License: Public domain
 
 import urllib, urllib2, cookielib, optparse, sys, os
