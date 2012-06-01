@@ -1,0 +1,239 @@
+#!/usr/bin/env python3
+
+# Utility to extract text data from an ODF document (typically
+# odt and odp), and put it in a LaTeX document.
+#
+# Do not expect a complete and fully automated translation
+# This script will just help people converting documents from ODF to LaTeX
+# You will have to complete the conversion manually
+
+# Copyright (C) 2011-2012 Free Electrons
+# Authors: Maxime Ripard <maxime at free-electrons.com>
+# Thomas Petazzoni <thomas at free-electrons.com>
+# 
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 2 of the License, or (at your
+# option) any later version.
+# 
+# THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+# NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+# USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+# ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# You should have received a copy of the  GNU General Public License along
+# with this program; if not, write  to the Free Software Foundation, Inc.,
+# 675 Mass Ave, Cambridge, MA 02139, USA
+
+import argparse
+import os.path
+import textwrap
+import zipfile
+
+from xml import sax
+
+class LatexDocument(object):
+    def __init__(self, dest):
+        self.texfile = open(dest, "w")
+        self.in_list = False
+
+    def sanitize(self, string):
+        string = string.replace("_", "\_")
+        string = string.replace("#", "\#")
+        string = string.replace(">", "\\textgreater ")
+        string = string.replace("<", "\\textless ")
+        string = string.replace("[", "\[")
+        string = string.replace("]", "\]")
+        return string
+
+    def add_text(self, string):
+        if not string:
+            return
+
+        for line in string.splitlines():
+            line = self.sanitize(line)
+            line = textwrap.fill(line, 80)
+            if not line == "\\\\":
+                self.texfile.write(line + "\n")
+            else:
+                self.texfile.write("\n")
+
+    def add_terminal(self, string):
+        self.texfile.write("\\code{%s}\n" % string)
+
+    def add_list_item(self, string):
+        self.add_text("\\item %s" % string)
+
+    def add_newline(self):
+        self.texfile.write("\n")
+
+    def open_list(self):
+        self.texfile.write("\\begin{itemize}\n")
+
+    def close_list(self):
+        self.texfile.write("\\end{itemize}\n")
+
+    def __del__(self):
+        self.texfile.close()
+
+class BeamerDocument(LatexDocument):
+    def __init__(self, dest):
+        super().__init__(dest)
+
+    def open_frame(self):
+        self.texfile.write("\\begin{frame}\n")
+
+    def close_frame(self):
+        self.texfile.write("\\end{frame}\n\n")
+
+    def add_page_title(self, string):
+        self.add_text("\\frametitle{%s}" % string.strip())
+
+    def __del__(self):
+        super().__del__()
+
+class TextDocument(LatexDocument):
+    def __init__(self, dest):
+        super().__init__(dest)
+
+    def __del__(self):
+        super().__del__()
+
+    def add_chapter(self, string):
+        self.texfile.write("\\chapter{%s}\n" % string)
+
+    def add_section(self, string):
+        self.texfile.write("\\section{%s}\n" % string)
+
+class ODPContentHandler(sax.handler.ContentHandler):
+    def __init__(self, document):
+        self.tex = document
+        self.tags = list()
+        self.buffer = list()
+        self.ignore = False
+        self.depth_list = 0
+        self.page_line = 0
+
+    def startElement(self, name, attrs):
+        if name == "draw:page":
+            self.tex.open_frame()
+            self.page_line = 0
+        elif name == "draw:custom-shape":
+            self.ignore = True
+        elif name == "text:list":
+            if self.depth_list > 0:
+                self.tex.add_list_item("".join(self.buffer))
+            else:
+                self.tex.add_text("".join(self.buffer))
+            self.depth_list += 1
+            self.buffer = list()
+            self.tex.open_list()
+
+        self.tags.append(name)
+
+    def characters(self, content):
+        self.buffer.append(content)
+
+    def endElement(self, name):
+        self.tags.pop()
+        buf = "".join(self.buffer)
+        self.buffer = list()
+
+        if name == "draw:custom-shape":
+            self.ignore = False
+            self.tex.add_text("TODO schema")
+            return
+
+        if self.ignore:
+            return
+
+        if name == "text:list":
+            self.tex.close_list()
+            self.depth_list -= 1
+        elif name == "draw:text-box":
+            if buf:
+                if self.page_line == 0:
+                    self.tex.add_page_title(buf)
+                else:
+                    self.tex.add_text(buf)
+                self.page_line += 1
+        elif name == "text:list-item":
+            if buf:
+                self.tex.add_list_item(buf)
+        elif name == "draw:page":
+            self.tex.close_frame()
+        elif name == "text:line-break":
+            self.buffer.append("%s\\\\\n" % buf)
+        elif name == "text:p":
+            self.buffer.append("%s\n" % buf)
+        else:
+            self.buffer.append(buf)
+
+class ODTContentHandler(sax.handler.ContentHandler):
+    def __init__(self, document):
+        self.tex = document
+        self.tags = list()
+        self.buffer = list()
+        self.list_depth = 0
+        self.in_paragraph = False
+
+    def startElement(self, name, attrs):
+        if name == "text:list":
+            self.tex.open_list()
+            self.list_depth += 1
+
+        self.tags.append(name)
+
+    def characters(self, content):
+        self.buffer.append(content)
+
+    def endElement(self, name):
+        self.tags.pop()
+
+        buf = "".join(self.buffer)
+
+        self.buffer = list()
+        
+        if name == "text:list":
+            self.tex.close_list()
+            self.list_depth -= 1
+        elif name == "text:p":
+            if buf:
+                if self.list_depth:
+                    self.tex.add_list_item(buf)
+                else:
+                    self.tex.add_text(buf)
+        elif name == "text:h":
+            if buf:
+                self.tex.add_section(buf)
+        else:
+            self.buffer.append(buf)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Extract the content of an odt'
+                                     ' file to a basic .tex file.')
+    parser.add_argument('file', type=str, help="The path to the file to process.")
+    args = parser.parse_args()
+    print(args.file)
+
+
+    with zipfile.ZipFile(args.file) as zipf:
+        content = zipf.open('content.xml')
+        filename = os.path.basename(args.file)
+        basename, ext = os.path.splitext(filename)
+        dest = basename + ".tex"
+
+        if ext == ".odt":
+            document = TextDocument(dest)
+            handler = ODTContentHandler(document)
+        elif ext == ".odp":
+            document = BeamerDocument(dest)
+            handler = ODPContentHandler(document)
+
+        sax.parse(content, handler)
