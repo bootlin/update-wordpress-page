@@ -1,5 +1,7 @@
 - Look for http:// URLs not introduced by \url or \href
-  find slides -name "*.tex" -exec grep -H "http://" {} ';' | grep -v url | grep -v href
+  find .  -name "*.tex" -exec grep -H "http://" {} ';' | grep -v url | grep -v href
+
+  Caution: false positives in \verbatim sections
 
 - Look for broken URLs
 
