@@ -1,0 +1,7 @@
+- Look for http:// URLs not introduced by \url or \href
+  find slides -name "*.tex" -exec grep -H "http://" {} ';' | grep -v url | grep -v href
+
+- Look for broken URLs
+
+- Check spelling, look for typical spelling mistakes and typos
+  - "the the", "informations", etc.
