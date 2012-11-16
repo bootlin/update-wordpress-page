@@ -71,7 +71,7 @@ print "Trying to load and boot a Linux kernel..."
 send "reset"
 gosub ubootprompt
 
-send "tftp 0x21000000 uImage_K_train
+send "tftp 0x21000000 uImage_K_train"
 expect {
 	"Please press Enter to activate this console."
 }
