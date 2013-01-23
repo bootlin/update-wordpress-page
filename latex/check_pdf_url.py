@@ -170,7 +170,7 @@ def url_is_ignored(url, exclude_hosts):
     return exclude_hosts.count(hostname)
 
 
-def check_url_threaded(url, errors, lock, tokens_per_host, options):
+def check_url_threaded(url, errors, lock, tokens_per_host, max_req_per_host):
 
     # Check that we don't run too many parallel checks per host
     # That could bring the host down or at least be considered
@@ -188,8 +188,8 @@ def check_url_threaded(url, errors, lock, tokens_per_host, options):
         # dictionaries are thread-safe,
         # but it's best to put a lock here anyway
         with lock:
-            if hostname in tokens_per_host:
-                tokens_per_host[hostname] = options.max_requests_per_host
+            if hostname not in tokens_per_host:
+                tokens_per_host[hostname] = max_req_per_host
 
         while True:
             with lock:
@@ -284,8 +284,6 @@ def extract_urls(filename, urls):
 
 def main():
 
-    global found_errors, options
-
     # Command parameters
     # Either default values, found in a configuration file
     # or on the command line
@@ -358,7 +356,6 @@ def main():
         sys.exit()
 
     # Run URL checks
-    found_errors = False
     tokens_per_host = {}
     errors = []
     lock = threading.Lock()
@@ -373,7 +370,7 @@ def main():
 
         t = threading.Thread(target=check_url_threaded,
                              args=(url, errors, lock,
-                             tokens_per_host, options))
+                             tokens_per_host, options.max_requests_per_host))
         t.start()
 
     # Wait for all threads to complete
