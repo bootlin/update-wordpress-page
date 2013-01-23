@@ -40,7 +40,15 @@
 #   * Apply a PEP8 checker
 #
 
-import sys, os, urllib2, urllib, urlparse, httplib, time, string, re, threading
+import os
+import re
+import sys
+import time
+import threading
+import httplib
+import urllib2
+import urllib
+import urlparse
 from HTMLParser import HTMLParser
 from pdfminer.pdfparser import PDFDocument, PDFParser
 from pdfminer.pdftypes import PDFStream
@@ -58,21 +66,25 @@ def touch(fname):
     else:
         open(fname, 'w').close()
 
-def debug (s):
+
+def debug(s):
     # Display debug information if debug mode is set
     global options
     if options.debug:
-       print '[DEBUG] {}'.format(s)
+        print '[DEBUG] {}'.format(s)
 
-def info (s):
+
+def info(s):
     # Display information if verbose mode is set
     global options
     if options.verbose:
-       print '[INFO]  {}'.format(s)
+        print '[INFO]  {}'.format(s)
+
 
 def url_fix(s, charset='utf-8'):
-    # Hey! This snippet is from 'Werkzeug' project. See: http://werkzeug.pocoo.org/
-
+    # This snippet idea has been taken from 'Werkzeug' project.
+    # See: http://werkzeug.pocoo.org/
+    #
     # Sometimes you get an URL by a user that just isn't a real
     # URL because it contains unsafe characters like ' ' and so on.
     # This function can fix some of the problems in a similar way browsers
@@ -92,11 +104,14 @@ def url_fix(s, charset='utf-8'):
 
 def check_http_url(url):
     do_url = url_fix(url)
-    request=urllib2.Request(do_url)
+    request = urllib2.Request(do_url)
     opener = urllib2.build_opener()
-    # Add a browser-like User-Agent. Some sites (like wikipedia) don't seem to accept requests
+    # Add a browser-like User-Agent.
+    # Some sites (like wikipedia) don't seem to accept requests
     # with the default urllib2 User-Agent
-    request.add_header('User-Agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv \u2014 1.7.8) Gecko/20050511')
+    request.add_header('User-Agent',
+                       'Mozilla/5.0 (X11; U; Linux i686; en-US;'
+                       'rv \u2014 1.7.8) Gecko/20050511')
 
     try:
         opener.open(request).read()
@@ -106,7 +121,8 @@ def check_http_url(url):
         return (False, why)
     except httplib.BadStatusLine, why:
         return (False, why)
-    return (True,None)
+    return (True, None)
+
 
 def check_ftp_url(url):
     # urllib2 doesn't raise any exception when a
@@ -121,14 +137,15 @@ def check_ftp_url(url):
         return (False, why)
     else:
         # With a non-existing file on a ftp URL,
-    	# we get a zero size output file
-    	# Even if a real zero size file exists,
-    	# it's worth highlighting anyway
-    	# (no point in making an hyperlink to it)
+        # we get a zero size output file
+        # Even if a real zero size file exists,
+        # it's worth highlighting anyway
+        # (no point in making an hyperlink to it)
         if os.path.getsize(tmpfile) == 0:
             os.remove(tmpfile)
             return (False, 'Non existing or empty file')
-    return (True,None)
+    return (True, None)
+
 
 def check_url(url):
 
@@ -136,7 +153,9 @@ def check_url(url):
 
     protocol = urlparse.urlparse(url)[0]
 
-    # TODO: I **think** PDF also has 'internal links', should we check for those?
+    # TODO:
+    # I **think** PDF also has 'internal links',
+    # should we check for those?
     if protocol == 'http' or protocol == 'https':
         res = check_http_url(url)
     elif protocol == 'ftp':
@@ -145,21 +164,24 @@ def check_url(url):
         # Still try to handle other protocols
         try:
             urllib2.urlopen(url)
-            res = (True,None)
+            res = (True, None)
         except:
             res = (False, 'Unknown - Please report this bug!')
 
     debug('Done checking link {}'.format(url))
     return res
 
+
 def get_hostname(url):
 
     return urlparse.urlparse(url)[1]
+
 
 def url_is_ignored(url, exclude_hosts):
 
     hostname = get_hostname(url)
     return exclude_hosts.count(hostname)
+
 
 def check_url_threaded(url, errors, lock, tokens_per_host, options):
 
@@ -179,7 +201,7 @@ def check_url_threaded(url, errors, lock, tokens_per_host, options):
         # dictionaries are thread-safe,
         # but it's best to put a lock here anyway
         with lock:
-            if not tokens_per_host.has_key(hostname):
+            if hostname in tokens_per_host:
                 tokens_per_host[hostname] = options.max_requests_per_host
 
         while True:
@@ -191,32 +213,37 @@ def check_url_threaded(url, errors, lock, tokens_per_host, options):
 
     # Do the URL check!
     res, reason = check_url(url)
-    if res == False:
+    if res is False:
         with lock:
-            errors.append((url,reason))
+            errors.append((url, reason))
 
     if hostname != '':
         with lock:
             tokens_per_host[hostname] += 1
+
 
 ##########################################################
 # URL extraction
 ##########################################################
 
 ESC_PAT = re.compile(r'[\000-\037&<>()"\042\047\134\177-\377]')
+
+
 def e(s):
-    return ESC_PAT.sub(lambda m:'&#%d;' % ord(m.group(0)), s)
+    return ESC_PAT.sub(lambda m: '&#%d;' % ord(m.group(0)), s)
+
 
 def search_url_string(obj):
     if isinstance(obj, str):
         return e(obj)
+
 
 def search_url(obj, urls):
     if obj is None:
         return
 
     if isinstance(obj, dict):
-        for (k,v) in obj.iteritems():
+        for (k, v) in obj.iteritems():
 
             # A dictionary with a "URI" key
             # may contain an URL string
@@ -237,6 +264,7 @@ def search_url(obj, urls):
 
     elif isinstance(obj, PDFStream):
         search_url(obj.attrs, urls)
+
 
 def extract_urls(filename, urls):
 
@@ -262,6 +290,7 @@ def extract_urls(filename, urls):
     fp.close()
     return
 
+
 ##########################################################
 # Main program
 ##########################################################
@@ -278,7 +307,8 @@ def main():
     usage = 'usage: %prog [options] [PDF document files]'
     description = 'Reports broken hyperlinks in PDF documents'
 
-    optparser = OptionParser(usage=usage, version='0.1', description=description)
+    optparser = OptionParser(usage=usage, version='0.1',
+                             description=description)
 
     optparser.add_option('-v', '--verbose',
                          action='store_true', dest='verbose', default=False,
@@ -286,29 +316,36 @@ def main():
 
     optparser.add_option('-s', '--status',
                          action='store_true', dest='status', default=False,
-                         help='store check status information in a .checked file')
+                         help='store check status information'
+                         'in a .checked file')
 
     optparser.add_option('-d', '--debug',
                          action='store_true', dest='debug', default=False,
                          help='display debug information')
 
     optparser.add_option('-t', '--max-threads',
-                         action='store', type='int', dest='max_threads', default=100,
-                         help='set the maximum number of parallel threads to create')
+                         action='store', type='int',
+                         dest='max_threads', default=100,
+                         help='set the maximum number'
+                         'of parallel threads to create')
 
     optparser.add_option('-r', '--max-requests-per-host',
-                         action='store', type='int', dest='max_requests_per_host', default=5,
-                         help='set the maximum number of parallel requests per host')
+                         action='store', type='int',
+                         dest='max_requests_per_host', default=5,
+                         help='set the maximum number'
+                         'of parallel requests per host')
 
     optparser.add_option('-x', '--exclude-hosts',
-                         action='store', type='string', dest='exclude_hosts', default='',
-                         help='ignore urls which host name belongs to the given list')
+                         action='store', type='string',
+                         dest='exclude_hosts', default='',
+                         help='ignore urls which host name'
+                         'belongs to the given list')
 
     (options, args) = optparser.parse_args()
 
     if len(args) == 0:
-       print >> sys.stderr, 'No files to check. Exiting.'
-       sys.exit()
+        print >> sys.stderr, 'No files to check. Exiting.'
+        sys.exit()
 
     # Turn options.exclude_hosts into a list, for exact matching
     options.exclude_hosts = options.exclude_hosts.split()
@@ -319,8 +356,8 @@ def main():
         extract_urls(input_file, urls)
 
     if len(urls) == 0:
-       print >> sys.stderr, 'No URLs found! Exiting.'
-       sys.exit()
+        print >> sys.stderr, 'No URLs found! Exiting.'
+        sys.exit()
 
     # Run URL checks
     found_errors = False
@@ -337,18 +374,22 @@ def main():
             time.sleep(1)
 
         t = threading.Thread(target=check_url_threaded,
-                             args=(url, errors, lock, tokens_per_host, options))
+                             args=(url, errors, lock,
+                             tokens_per_host, options))
         t.start()
 
     # Wait for all threads to complete
     for thread in threading.enumerate():
-        info('Waiting for URL checks to complete: {} threads left'.format(threading.active_count()-1))
+        info('Waiting for URL checks'
+             'to complete: {} threads left'.
+             format(threading.active_count()-1))
         if thread is not threading.current_thread():
                 thread.join()
 
     if len(errors) > 0:
         for url, reason in errors:
-            print >> sys.stderr, 'URL {} failed. Reason: {}'.format(url, reason)
+            print >> sys.stderr,
+            'URL {} failed. Reason: {}'.format(url, reason)
         sys.exit(1)
 
     if options.status:
