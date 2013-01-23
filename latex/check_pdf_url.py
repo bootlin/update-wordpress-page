@@ -45,6 +45,7 @@ import re
 import sys
 import time
 import threading
+import logging as log
 import httplib
 import urllib2
 import urllib
@@ -65,20 +66,6 @@ def touch(fname):
         os.utime(fname, None)
     else:
         open(fname, 'w').close()
-
-
-def debug(s):
-    # Display debug information if debug mode is set
-    global options
-    if options.debug:
-        print '[DEBUG] {}'.format(s)
-
-
-def info(s):
-    # Display information if verbose mode is set
-    global options
-    if options.verbose:
-        print '[INFO]  {}'.format(s)
 
 
 def url_fix(s, charset='utf-8'):
@@ -149,7 +136,7 @@ def check_ftp_url(url):
 
 def check_url(url):
 
-    debug('Checking link: {}'.format(url))
+    log.debug('Checking link: {}'.format(url))
 
     protocol = urlparse.urlparse(url)[0]
 
@@ -168,7 +155,7 @@ def check_url(url):
         except:
             res = (False, 'Unknown - Please report this bug!')
 
-    debug('Done checking link {}'.format(url))
+    log.debug('Done checking link {}'.format(url))
     return res
 
 
@@ -191,7 +178,7 @@ def check_url_threaded(url, errors, lock, tokens_per_host, options):
 
     hostname = get_hostname(url)
 
-    info('Checking hyperlink: {}'.format(url))
+    log.info('Checking hyperlink: {}'.format(url))
 
     # Counting parallel requests to the same host.
     # Of course, ignore local links
@@ -253,7 +240,7 @@ def search_url(obj, urls):
                 parser = HTMLParser()
                 url = parser.unescape(url)
                 if url is not None:
-                    debug('URL found: {}'.format(url))
+                    log.debug('URL found: {}'.format(url))
                     urls.add(url)
 
             search_url(v, urls)
@@ -268,7 +255,7 @@ def search_url(obj, urls):
 
 def extract_urls(filename, urls):
 
-    info('Checking links in file {} ...'.format(filename))
+    log.info('Checking links in file {} ...'.format(filename))
 
     # PDFMiner setup shamelessly taken from dumppdf.py
     doc = PDFDocument()
@@ -343,8 +330,19 @@ def main():
 
     (options, args) = optparser.parse_args()
 
+    if options.debug:
+        level = log.DEBUG
+    elif options.verbose:
+        level = log.INFO
+    else:
+        level = log.WARNING
+
+    log.basicConfig(stream=sys.stderr,
+                    level=level,
+                    format='%(levelname)s: %(message)s')
+
     if len(args) == 0:
-        print >> sys.stderr, 'No files to check. Exiting.'
+        log.critical('No files to check. Exiting.')
         sys.exit()
 
     # Turn options.exclude_hosts into a list, for exact matching
@@ -356,7 +354,7 @@ def main():
         extract_urls(input_file, urls)
 
     if len(urls) == 0:
-        print >> sys.stderr, 'No URLs found! Exiting.'
+        log.critical('No URLs found! Exiting.')
         sys.exit()
 
     # Run URL checks
@@ -380,22 +378,21 @@ def main():
 
     # Wait for all threads to complete
     for thread in threading.enumerate():
-        info('Waiting for URL checks'
-             'to complete: {} threads left'.
-             format(threading.active_count()-1))
+        log.info('Waiting for URL checks '
+                 'to complete: {} threads left'.
+                 format(threading.active_count()-1))
         if thread is not threading.current_thread():
                 thread.join()
 
     if len(errors) > 0:
         for url, reason in errors:
-            print >> sys.stderr,
-            'URL {} failed. Reason: {}'.format(url, reason)
+            log.error('URL {} failed. Reason: {}'.format(url, reason))
         sys.exit(1)
 
     if options.status:
         touch('.' + os.path.basename(input_file) + '.checked')
 
-    info('Hyperlink checking successful')
+    log.info('Hyperlink checking successful')
 
     sys.exit(0)
 
