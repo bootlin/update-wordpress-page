@@ -352,7 +352,7 @@ def main():
         extract_urls(input_file, urls)
 
     if len(urls) == 0:
-        log.critical('No URLs found! Exiting.')
+        log.warning('No URLs found! Exiting.')
         sys.exit()
 
     # Run URL checks
