@@ -301,7 +301,7 @@ def main():
 
     optparser.add_option('-s', '--status',
                          action='store_true', dest='status', default=False,
-                         help='store check status information'
+                         help='store check status information '
                          'in a .checked file')
 
     optparser.add_option('-d', '--debug',
@@ -311,19 +311,19 @@ def main():
     optparser.add_option('-t', '--max-threads',
                          action='store', type='int',
                          dest='max_threads', default=100,
-                         help='set the maximum number'
+                         help='set the maximum number '
                          'of parallel threads to create')
 
     optparser.add_option('-r', '--max-requests-per-host',
                          action='store', type='int',
                          dest='max_requests_per_host', default=5,
-                         help='set the maximum number'
+                         help='set the maximum number '
                          'of parallel requests per host')
 
     optparser.add_option('-x', '--exclude-hosts',
                          action='store', type='string',
                          dest='exclude_hosts', default='',
-                         help='ignore urls which host name'
+                         help='ignore urls which host name '
                          'belongs to the given list')
 
     (options, args) = optparser.parse_args()
