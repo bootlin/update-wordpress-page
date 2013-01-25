@@ -5,6 +5,9 @@
 #
 # About page: TODO
 # Downloads page: TODO
+# Required packages: python-pdfminer
+# Recommended packages: pdfminer-data (encoding data needed to read
+# some PDF documents in CJK (Chinese, Japanese, Korean) languages.
 #
 # Copyright (C) 2012 Free Electrons
 # Author: Ezequiel Garcia <ezequiel.garcia at free-electrons com>
