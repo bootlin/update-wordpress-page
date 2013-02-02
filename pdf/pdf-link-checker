@@ -93,8 +93,8 @@ def url_fix(s, charset='utf-8'):
 ##########################################################
 
 def check_http_url(url):
-    do_url = url_fix(url)
-    request = urllib2.Request(do_url)
+
+    request = urllib2.Request(url)
     opener = urllib2.build_opener()
     # Add a browser-like User-Agent.
     # Some sites (like wikipedia) don't seem to accept requests
@@ -120,9 +120,8 @@ def check_ftp_url(url):
     # Only invalid domains are reported
     # That's why we are using urllib.urlretrieve
 
-    do_url = url_fix(url)
     try:
-        tmpfile = urllib.urlretrieve(do_url)[0]
+        tmpfile = urllib.urlretrieve(url)[0]
     except IOError, why:
         return (False, why)
     else:
@@ -146,17 +145,26 @@ def check_url(url):
     # TODO:
     # I **think** PDF also has 'internal links',
     # should we check for those?
-    if protocol == 'http' or protocol == 'https':
-        res = check_http_url(url)
-    elif protocol == 'ftp':
-        res = check_ftp_url(url)
-    else:
-        # Still try to handle other protocols
-        try:
-            urllib2.urlopen(url)
-            res = (True, None)
-        except:
-            res = (False, 'Unknown - Please report this bug!')
+
+    for i in range(0,2):
+
+        if protocol == 'http' or protocol == 'https':
+            res = check_http_url(url)
+        elif protocol == 'ftp':
+            res = check_ftp_url(url)
+        else:
+            # Still try to handle other protocols
+            try:
+                urllib2.urlopen(url)
+                res = (True, None)
+            except:
+                res = (False, 'Unknown - Please report this bug!')
+
+        # If we get a False result,
+        # we'll try (the first time) with a 'fixed' url
+        if res[0] is False and i == 0:
+            url = url_fix(url)
+            log.debug('Trying with fixed link: {}'.format(url))
 
     log.debug('Done checking link {}'.format(url))
     return res
