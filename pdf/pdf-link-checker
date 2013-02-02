@@ -275,7 +275,14 @@ def extract_urls(filename, urls):
     parser = PDFParser(fp)
     parser.set_document(doc)
     doc.set_parser(parser)
-    doc.initialize()
+
+    try:
+        doc.initialize()
+    except:
+        # TODO: Catch the proper exception
+        #       and print some sane message
+        log.error("Cannot open file {}\n".format(filename))
+        return
 
     # Iterate through each object and search for URLs there
     for xref in doc.xrefs:
