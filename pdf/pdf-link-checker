@@ -329,6 +329,11 @@ def main():
                          help='ignore urls which host name '
                          'belongs to the given list')
 
+    optparser.add_option('', '--check-url',
+                         action='store', type='string',
+                         dest='check_url', default='',
+                         help='checks given url instead of checking PDF (debug)')
+
     (options, args) = optparser.parse_args()
 
     if options.debug:
@@ -341,6 +346,16 @@ def main():
     log.basicConfig(stream=sys.stderr,
                     level=level,
                     format='%(levelname)s: %(message)s')
+
+    # This option is for debug purposes only,
+    # we can use it -for instance- to work out
+    # a false-positive invalid URL
+    if len(options.check_url) != 0:
+        url = options.check_url
+        res, reason = check_url(url)
+        if res is False:
+            log.error('URL {} failed. Reason: {}'.format(url, reason))
+        sys.exit()
 
     if len(args) == 0:
         log.critical('No files to check. Exiting.')
