@@ -40,8 +40,9 @@
 #
 # TODO
 # ----
-#   * Apply a PEP8 checker
-#
+#   * Deal with mailto:support@phytec.de 404
+#   * Deal with "www.marvell.com" 404
+#   * Why does some PDFs fail on doc.initialize()?
 
 import os
 import re
