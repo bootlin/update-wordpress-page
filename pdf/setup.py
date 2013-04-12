@@ -15,7 +15,7 @@ from distutils.core import setup
 
 setup(
     name='pdf-link-checker',
-    version='1.0',
+    version='1.0.1',
     description='Reports broken hyperlinks in PDF documents',
     long_description=open('README.rst').read(),
     author='Ezequiel Garcia',
