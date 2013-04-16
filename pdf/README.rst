@@ -42,8 +42,21 @@ TODO
 
 * Fix: some documents are failing on doc.initialize().
 
+* Fix: ugly timeouts encountered when running the script.
+
+* Move from distutils to distribute to have automatic
+  dependency resolution when installing the package.
+
+* Replace the thread array into a nice thread pool.
+  Each thread from the pool should take an URL from a (protected) queue.
+  We could also have one queue per host and thus handle the
+  max-requests-per-host constraint without a separate parameter.
+
 Version History
 ===============
+
+1.0.1
+  * Version bump
 
 1.0
   * Initial release
