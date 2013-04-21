@@ -1,7 +1,7 @@
 # Minicom script to test and clean up Calao bor for kernel training
 # Some path have to be changed according your set up
 # Host IP adfress is supossed to be 192.168.100.1
-# nfsroot is located at /mnt/open/felabs/linux/modules/nfsroot/
+# nfsroot is located at /work/felabs/linux/modules/nfsroot
 # extracted from http://free-electrons.com/labs/labs.tar.xz
 # The kernel image to use is uImage_K_train
 
@@ -49,7 +49,7 @@ gosub ubootprompt
 send "set ipaddr 192.168.100.100"
 gosub ubootprompt
 
-send "set bootargs root=/dev/nfs console=ttyS0 ip=192.168.100.100 nfsroot=192.168.100.1:/mnt/open/felabs/linux/modules/nfsroot/"
+send "set bootargs root=/dev/nfs console=ttyS0 ip=192.168.100.100 nfsroot=192.168.100.1:/work/felabs/linux/modules/nfsroot/"
 gosub ubootprompt
 
 send "set bootdelay 0"
