@@ -8,4 +8,4 @@
 - Check spelling, look for typical spelling mistakes and typos
   - "the the", "informations", "an user", "root user" instead of "\code{root} user",
     "NULL" instead of "\code{NULL}", "return 0" instead of "return \code{0}" (outside
-    \verbatim), "data is"
+    \verbatim), "data is", "performances"
