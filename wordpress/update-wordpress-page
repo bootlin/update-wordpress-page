@@ -15,13 +15,13 @@
 # 
 # Multiple wordpress sites are supported.
 #
-# Tested with Python 2.6 to 2.7, WordPress 3.0 to 3.5.1
+# Tested with Python 2.6 to 2.7, WordPress 3.0 to 4.1
 #
 # Advantage: you don't have to leave a direct database connection
 # to your website open, and don't have to understand
 # the WordPress database.
 #
-# Requirements (tested on Ubuntu 12.04):
+# Requirements (tested on Ubuntu 12.04 and 14.04):
 # wget http://pypi.python.org/packages/source/C/ClientForm/ClientForm-0.2.10.tar.gz
 # tar zxf ClientForm-0.2.10.tar.gz
 # cd ClientForm-0.2.10
@@ -29,7 +29,7 @@
 # python setup.py build
 # sudo python setup.py install
 #
-# Copyright 2010-2012, Free Electrons, <michael dot opdenacker free-electrons com> 
+# Copyright 2010-2015, Free Electrons, <michael dot opdenacker free-electrons com> 
 # License: Public domain
 
 import urllib, urllib2, cookielib, optparse, sys, os
@@ -38,7 +38,7 @@ import ConfigParser, ClientForm
 usage = 'Usage: %prog url-base postid page-contents'
 description = 'Updates a Wordpress page with the specified contents'
 optparser = optparse.OptionParser(usage=usage, version='1.0beta1', \
- 				  description=description)
+				  description=description)
 (options, args) = optparser.parse_args()
 
 if len(args) != 3:
@@ -87,7 +87,7 @@ try:
 	form["content"] = new_contents
 	content = opener.open(form.click()).read()
 	check_success(content)
- 
+
 except urllib2.HTTPError, e:
 	sys.exit("%d: %s" % (e.code, e.msg))
 except IOError, e:
