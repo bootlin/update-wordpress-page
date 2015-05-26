@@ -21,19 +21,14 @@
 # to your website open, and don't have to understand
 # the WordPress database.
 #
-# Requirements (tested on Ubuntu 12.04 and 14.04):
-# wget http://pypi.python.org/packages/source/C/ClientForm/ClientForm-0.2.10.tar.gz
-# tar zxf ClientForm-0.2.10.tar.gz
-# cd ClientForm-0.2.10
-# sudo apt-get install python-setuptools
-# python setup.py build
-# sudo python setup.py install
+# Requirements (tested on Ubuntu 14.04): Python Mechanize
+#  apt-get install python-mechanize
 #
 # Copyright 2010-2015, Free Electrons, <michael dot opdenacker free-electrons com> 
 # License: Public domain
 
 import urllib, urllib2, cookielib, optparse, sys, os
-import ConfigParser, ClientForm
+import ConfigParser, mechanize
 
 usage = 'Usage: %prog url-base postid page-contents'
 description = 'Updates a Wordpress page with the specified contents'
@@ -78,7 +73,7 @@ resp.close()
 # Access member only pages
 resp = opener.open(url)
 
-forms = ClientForm.ParseResponse(resp, backwards_compat=False)
+forms = mechanize.ParseResponse(resp, backwards_compat=False)
 
 try:
 	# Wordpress has multiple forms and uses forms[1] for content
