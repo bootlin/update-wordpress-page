@@ -3,7 +3,7 @@
 # update-wordpress-page: updates a Wordpress page with the contents
 # of the input file
 #
-# Described on http://free-electrons.com/blog/automated-wp-page-updates/
+# Described on https://free-electrons.com/blog/automated-wp-page-updates/
 # Download: git.free-electrons.com/training-scripts/tree/wordpress
 #
 # Usage: update-wordpress-page url-base post-id content-file
@@ -30,23 +30,29 @@
 import urllib, urllib2, cookielib, optparse, sys, os
 import ConfigParser, mechanize
 
-usage = 'Usage: %prog url-base postid page-contents'
+usage = 'Usage: %prog http|https url-base postid page-contents'
 description = 'Updates a Wordpress page with the specified contents'
-optparser = optparse.OptionParser(usage=usage, version='1.0beta1', \
+optparser = optparse.OptionParser(usage=usage, version='1.0', \
 				  description=description)
 (options, args) = optparser.parse_args()
 
-if len(args) != 3:
+if len(args) != 4:
    print 'Wrong number of arguments. Exiting.'
    sys.exit()
 
-url_base = args[0]
-post_id = args [1]
-login_url = 'http://' + url_base + '/wp-login.php'
-url = 'http://' + url_base + '/wp-admin/post.php?post=' \
+protocol = args[0]
+
+if protocol not in ['http', 'https']:
+   print 'Unsupported protocol: ' + protocol + '. Exiting.'
+   sys.exit()
+
+url_base = args[1]
+post_id = args [2]
+login_url = protocol + '://' + url_base + '/wp-login.php'
+url = protocol + '://' + url_base + '/wp-admin/post.php?post=' \
       + post_id + '&action=edit'
 
-page_contents = args[2]
+page_contents = args[3]
 file = open(page_contents)
 new_contents= file.read()
 file.close()
