@@ -5,9 +5,9 @@
 #
 # unoconv and OOo are buggy tools. That's why we need this wrapper
 #
-# Copyright (C) 2010-2012 Free Electrons
-# Author: Michael Opdenacker <michael at free-electrons com>
-# Home page: http://git.free-electrons.com/training-scripts/
+# Copyright (C) 2010-2012 Bootlin
+# Author: Michael Opdenacker <michael at bootlin com>
+# Home page: http://git.bootlin.com/training-scripts/
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the

@@ -7,9 +7,9 @@
 # This script will just help people converting documents from ODF to LaTeX
 # You will have to complete the conversion manually
 
-# Copyright (C) 2011-2012 Free Electrons
-# Authors: Maxime Ripard <maxime at free-electrons.com>
-# Thomas Petazzoni <thomas at free-electrons.com>
+# Copyright (C) 2011-2012 Bootlin
+# Authors: Maxime Ripard <maxime at bootlin.com>
+# Thomas Petazzoni <thomas at bootlin.com>
 # 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the

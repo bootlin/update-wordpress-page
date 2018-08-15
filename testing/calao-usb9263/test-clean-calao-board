@@ -2,7 +2,7 @@
 # Some path have to be changed according your set up
 # Host IP adfress is supossed to be 192.168.100.1
 # nfsroot is located at /work/felabs/linux/modules/nfsroot
-# extracted from http://free-electrons.com/labs/labs.tar.xz
+# extracted from http://bootlin.com/labs/labs.tar.xz
 # The kernel image to use is uImage_K_train
 
 # Run this script with
