@@ -4,7 +4,7 @@
 # of the input file
 #
 # Described on https://bootlin.com/blog/automated-wp-page-updates/
-# Download: git.bootlin.com/training-scripts/tree/wordpress
+# Download: https://github.com/bootlin/update-wordpress-page
 #
 # Usage: update-wordpress-page url-base post-id content-file
 # 
