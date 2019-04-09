@@ -7,12 +7,12 @@
 # Download: https://github.com/bootlin/update-wordpress-page
 #
 # Usage: update-wordpress-page url-base post-id content-file
-# 
+#
 # Example: update-wordpress-page myblog.com 245 page-contents
 #
 # For each url-base, the $HOME/.update-wordpress-page file
 # should give the wordpress user and password
-# 
+#
 # Multiple wordpress sites are supported.
 #
 # Tested with Python 2.6 to 2.7, WordPress 3.0 to 4.1
@@ -24,7 +24,7 @@
 # Requirements (tested on Ubuntu 14.04): Python Mechanize
 #  apt-get install python-mechanize
 #
-# Copyright 2010-2015, Bootlin, <michael dot opdenacker bootlin com> 
+# Copyright 2010-2015, Bootlin, <michael dot opdenacker bootlin com>
 # License: Public domain
 
 import urllib, urllib2, cookielib, optparse, sys, os
