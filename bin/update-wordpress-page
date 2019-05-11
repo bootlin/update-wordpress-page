@@ -15,7 +15,7 @@
 #
 # Multiple wordpress sites are supported.
 #
-# Tested with Python 2.6 to 2.7, WordPress 3.0 to 4.1
+# Tested with Python 2.6 to 2.7, WordPress 3.0 to 5.1
 #
 # Advantage: you don't have to leave a direct database connection
 # to your website open, and don't have to understand
