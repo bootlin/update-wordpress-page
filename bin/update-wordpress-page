@@ -1,7 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # update-wordpress-page: updates a Wordpress page with the contents
-# of the input file
+# of the input file.
+#
+# xmlrpc implementation of original work by Michael Opdenacker of Bootlin
+# <michael dot opdenacker bootlin com>
 #
 # Described on https://bootlin.com/blog/automated-wp-page-updates/
 # Download: https://github.com/bootlin/update-wordpress-page
@@ -15,85 +18,66 @@
 #
 # Multiple wordpress sites are supported.
 #
-# Tested with Python 2.6 to 2.7, WordPress 3.0 to 5.1
+# Tested with Python 3.6.9/3.7.5, WordPress 5.3
 #
-# Advantage: you don't have to leave a direct database connection
-# to your website open, and don't have to understand
-# the WordPress database.
+# Client Requirements:
+#  configparser==4.0.2
+#  python-wordpress-xmlrpc==2.3
 #
-# Requirements (tested on Ubuntu 14.04): Python Mechanize
-#  apt-get install python-mechanize
+# Server requirements (Ubuntu 18.04):
+#   apt-get install php7.2-xml
 #
-# Copyright 2010-2015, Bootlin, <michael dot opdenacker bootlin com>
+# Vince Hillier / Revenni (vince at revenni dot com) 12092019
 # License: Public domain
 
-import urllib, urllib2, cookielib, optparse, sys, os
-import ConfigParser, mechanize
+import argparse, sys, os
+import configparser
 
-usage = 'Usage: %prog http|https url-base postid page-contents'
+from wordpress_xmlrpc import Client, WordPressPage
+from wordpress_xmlrpc.methods import posts
+
 description = 'Updates a Wordpress page with the specified contents'
-optparser = optparse.OptionParser(usage=usage, version='1.0', \
-				  description=description)
-(options, args) = optparser.parse_args()
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('protocol', help='http|https', choices=['http', 'https'])
+parser.add_argument('url_base', help='bootlin.com')
+parser.add_argument('page_id',  type=int, help='wordpress post id: 1223')
+parser.add_argument('page_content', help='filename of new page')
+args = parser.parse_args()
 
-if len(args) != 4:
-   print 'Wrong number of arguments. Exiting.'
-   sys.exit()
+protocol = args.protocol
+url_base = args.url_base
+page_id = args.page_id
+page_contents = args.page_content
+config_file = os.environ['HOME'] + '/.update-wordpress-page'
+url = protocol + '://' + url_base + '/xmlrpc.php'
 
-protocol = args[0]
-
-if protocol not in ['http', 'https']:
-   print 'Unsupported protocol: ' + protocol + '. Exiting.'
-   sys.exit()
-
-url_base = args[1]
-post_id = args [2]
-login_url = protocol + '://' + url_base + '/wp-login.php'
-url = protocol + '://' + url_base + '/wp-admin/post.php?post=' \
-      + post_id + '&action=edit'
-
-page_contents = args[3]
-file = open(page_contents)
-new_contents= file.read()
-file.close()
-
-# Read configuration file
-
-config = ConfigParser.RawConfigParser()
-config.read(os.environ['HOME'] + '/.update-wordpress-page')
-user = config.get(url_base, 'user')
-password = config.get(url_base, 'password')
-
-# Open the authentication page
-cj = cookielib.CookieJar()
-opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-
-login_data = urllib.urlencode({'log' : user,
-'pwd' : password,
-})
-
-# Log in
-resp = opener.open(login_url, login_data)
-resp.close()
-
-# Access member only pages
-resp = opener.open(url)
-
-forms = mechanize.ParseResponse(resp, backwards_compat=False)
-
+# pull in new contents from file
 try:
-	# Wordpress has multiple forms and uses forms[1] for content
-	# Other versions or other CMS may use [0] or [2]...
-	form = forms[1]
-	form["content"] = new_contents
-	content = opener.open(form.click()).read()
-	check_success(content)
+    file = open(page_contents)
+    new_contents = file.read()
+    file.close()
 
-except urllib2.HTTPError, e:
-	sys.exit("%d: %s" % (e.code, e.msg))
-except IOError, e:
-	print e
-except:
-	pass
+except Exception as e:
+    sys.exit(e)
 
-resp.close()
+# read configuration file
+try:
+    config = configparser.RawConfigParser()
+    config.read(config_file)
+    user = config.get(url_base, 'user')
+    password = config.get(url_base, 'password')
+except configparser.NoSectionError:
+    print("Error: {} does not contain valid entries for {}".format(config_file,url_base))
+    sys.exit(1)
+
+# pull down current page and modify it's contents
+try:
+    # classClient(url, username, password[, blog_id, transport])
+    client = Client(url, user, password)
+    page = client.call(posts.GetPost(page_id))
+    page.content = new_contents
+    if client.call(posts.EditPost(page_id, page)):
+        print("page {} updated: {}".format(page.id, page.link))
+
+except Exception as e:
+    sys.exit(e)
