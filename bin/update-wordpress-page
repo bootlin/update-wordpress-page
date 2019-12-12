@@ -27,7 +27,7 @@
 # Server requirements (Ubuntu 18.04):
 #   apt-get install php7.2-xml
 #
-# Vince Hillier / Revenni (vince at revenni dot com) 12092019
+# Vince Hillier / Revenni (vince at revenni dot com) 20191212
 # License: Public domain
 
 import argparse, sys, os
